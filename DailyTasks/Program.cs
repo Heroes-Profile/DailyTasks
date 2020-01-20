@@ -6,9 +6,9 @@ namespace DailyTasks
     {
         static void Main(string[] args)
         {
-            CalculateLeaderBoards cl = new CalculateLeaderBoards();
-            CalculateChange cc = new CalculateChange();
-            CalculateBreakdowns cb = new CalculateBreakdowns();
+            var cl = new CalculateLeaderBoards();
+            var cc = new CalculateChange();
+            var cb = new CalculateBreakdowns();
         }
     }
 }
