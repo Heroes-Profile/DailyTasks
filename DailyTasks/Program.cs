@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DailyTasks
 {
@@ -13,7 +9,6 @@ namespace DailyTasks
             CalculateLeaderBoards cl = new CalculateLeaderBoards();
             CalculateChange cc = new CalculateChange();
             CalculateBreakdowns cb = new CalculateBreakdowns();
-
         }
     }
 }
