@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using DailyTasks.Models;
 using MySql.Data.MySqlClient;
 
 namespace DailyTasks
 {
     class CalculateLeaderBoards
     {
-        private string strConnect = new DB_Connect().heroesprofile_config;
+        private readonly DbSettings _dbSettings;
+        private readonly string _connectionString;
         private Dictionary<string, int> heroes = new Dictionary<string, int>();
         private Dictionary<string, int> roles = new Dictionary<string, int>();
         private Dictionary<string, int> game_types = new Dictionary<string, int>();
         private int season;
-        public CalculateLeaderBoards()
+        public CalculateLeaderBoards(DbSettings dbSettings)
         {
+            _dbSettings = dbSettings;
+            _connectionString = ConnectionStringBuilder.BuildConnectionString(_dbSettings);
             var cacheNumber = 0;
-            using (var conn = new MySqlConnection(strConnect))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
 
@@ -60,7 +64,7 @@ namespace DailyTasks
             var startDate = DateTime.Now;
             var weeks = 1;
 
-            using (var conn = new MySqlConnection(strConnect))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
 
@@ -127,7 +131,7 @@ namespace DailyTasks
             }
 
 
-            using (var conn = new MySqlConnection(strConnect))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using var cmd = conn.CreateCommand();
@@ -140,7 +144,7 @@ namespace DailyTasks
         {
             var check_battletags = new Dictionary<string, LeaderboardPlayerData>();
 
-            using var conn = new MySqlConnection(strConnect);
+            using var conn = new MySqlConnection(_connectionString);
             conn.Open();
             var max_games_played = 0;
             using (var cmd = conn.CreateCommand())
@@ -212,23 +216,25 @@ namespace DailyTasks
                         var compare = Reader.GetDateTime("latest_game");
                         if (check_battletags[Reader.GetInt32("blizz_id") + "|" + Reader.GetInt32("region")].latest_game_played < Reader.GetDateTime("latest_game"))
                         {
-                            var data = new LeaderboardPlayerData();
-                            data.game_type = game_type;
-                            data.season = season;
-                            data.player_hero_role = player_hero_role;
-                            data.rank_counter = check_battletags[Reader.GetInt32("blizz_id") + "|" + Reader.GetInt32("region")].rank_counter;
-                            data.split_battletag = Reader.GetString("split_battletag");
-                            data.battletag = Reader.GetString("battletag");
-                            data.blizz_id = Reader.GetInt32("blizz_id");
-                            data.region = Reader.GetInt32("region");
-                            data.win_rate = Reader.GetDouble("win_rate");
-                            data.win = Reader.GetInt32("win");
-                            data.loss = Reader.GetInt32("loss");
-                            data.latest_game_played = Reader.GetDateTime("latest_game");
-                            data.games_played = Reader.GetInt32("games_played");
-                            data.conservative_rating = Reader.GetDouble("conservative_rating");
-                            data.rating = Reader.GetDouble("rating");
-                            data.cache_number = cache_number;
+                            var data = new LeaderboardPlayerData
+                            {
+                                    game_type = game_type,
+                                    season = season,
+                                    player_hero_role = player_hero_role,
+                                    rank_counter = check_battletags[Reader.GetInt32("blizz_id") + "|" + Reader.GetInt32("region")].rank_counter,
+                                    split_battletag = Reader.GetString("split_battletag"),
+                                    battletag = Reader.GetString("battletag"),
+                                    blizz_id = Reader.GetInt32("blizz_id"),
+                                    region = Reader.GetInt32("region"),
+                                    win_rate = Reader.GetDouble("win_rate"),
+                                    win = Reader.GetInt32("win"),
+                                    loss = Reader.GetInt32("loss"),
+                                    latest_game_played = Reader.GetDateTime("latest_game"),
+                                    games_played = Reader.GetInt32("games_played"),
+                                    conservative_rating = Reader.GetDouble("conservative_rating"),
+                                    rating = Reader.GetDouble("rating"),
+                                    cache_number = cache_number
+                            };
 
                             check_battletags[Reader.GetInt32("blizz_id") + "|" + Reader.GetInt32("region")] = data;
                         }

@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using DailyTasks.Models;
 using MySql.Data.MySqlClient;
 
 namespace DailyTasks
 {
     class CalculateChange
     {
-        private string _dbConnectString = new DB_Connect().heroesprofile_config;
+        private readonly DbSettings _dbSettings;
+        private readonly string _connectionString;
 
-        public CalculateChange()
+        public CalculateChange(DbSettings dbSettings)
         {
+            _dbSettings = dbSettings;
+            _connectionString = ConnectionStringBuilder.BuildConnectionString(_dbSettings);
 
             //Likely need to change this to a dynamic list, and then pull major patches from 2.43 up to the latest from season_game_versions table
             var majorPatches = new string[8];
@@ -25,7 +29,7 @@ namespace DailyTasks
 
 
             var minorPatches = new List<string>();
-            using (var conn = new MySqlConnection(_dbConnectString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
 
@@ -52,7 +56,7 @@ namespace DailyTasks
                 {
                     var globalResults = new Dictionary<string, ChangeData>();
                     var totalGames = 0;
-                    using var conn = new MySqlConnection(_dbConnectString);
+                    using var conn = new MySqlConnection(_connectionString);
                     conn.Open();
 
                     using (var cmd = conn.CreateCommand())
@@ -83,6 +87,7 @@ namespace DailyTasks
                                 {
                                     d.losses = reader.GetInt32("games_played");
                                 }
+
                                 totalGames += reader.GetInt32("games_played");
                                 globalResults[reader.GetString("hero")] = d;
                             }
@@ -107,6 +112,7 @@ namespace DailyTasks
                                 {
                                     d.losses = reader.GetInt32("games_played");
                                 }
+
                                 totalGames += reader.GetInt32("games_played");
                                 globalResults[reader.GetString("hero")] = d;
                             }
@@ -185,18 +191,19 @@ namespace DailyTasks
 
 
                         using var cmd = conn.CreateCommand();
-                        cmd.CommandText = "INSERT INTO heroesprofile_cache.global_hero_change (game_version, game_type, hero, win_rate, popularity, ban_rate, games_played, wins, losses, bans) VALUES (" +
-                                          "\"" + majorPatch + "\"" + ", " +
-                                          "\"" + gameType + "\"" + ", " +
-                                          "\"" + hero + "\"" + ", " +
-                                          "\"" + d.win_rate + "\"" + ", " +
-                                          "\"" + d.popularity + "\"" + ", " +
-                                          "\"" + d.ban_rate + "\"" + ", " +
-                                          "\"" + d.games_played + "\"" + ", " +
-                                          "\"" + d.wins + "\"" + ", " +
-                                          "\"" + d.losses + "\"" + ", " +
-                                          "\"" + d.bans + "\"" +
-                                          ")";
+                        cmd.CommandText =
+                                "INSERT INTO heroesprofile_cache.global_hero_change (game_version, game_type, hero, win_rate, popularity, ban_rate, games_played, wins, losses, bans) VALUES (" +
+                                "\"" + majorPatch + "\"" + ", " +
+                                "\"" + gameType + "\"" + ", " +
+                                "\"" + hero + "\"" + ", " +
+                                "\"" + d.win_rate + "\"" + ", " +
+                                "\"" + d.popularity + "\"" + ", " +
+                                "\"" + d.ban_rate + "\"" + ", " +
+                                "\"" + d.games_played + "\"" + ", " +
+                                "\"" + d.wins + "\"" + ", " +
+                                "\"" + d.losses + "\"" + ", " +
+                                "\"" + d.bans + "\"" +
+                                ")";
                         cmd.CommandText += " ON DUPLICATE KEY UPDATE " +
                                            "win_rate = VALUES(win_rate), " +
                                            "popularity = VALUES(popularity), " +
@@ -220,7 +227,7 @@ namespace DailyTasks
                     {
                         var globalResults = new Dictionary<string, ChangeData>();
                         var totalGames = 0;
-                        using var conn = new MySqlConnection(_dbConnectString);
+                        using var conn = new MySqlConnection(_connectionString);
                         conn.Open();
 
                         using (var cmd = conn.CreateCommand())
@@ -251,6 +258,7 @@ namespace DailyTasks
                                     {
                                         d.losses = reader.GetInt32("games_played");
                                     }
+
                                     totalGames += reader.GetInt32("games_played");
                                     globalResults[reader.GetString("hero")] = d;
                                 }
@@ -275,6 +283,7 @@ namespace DailyTasks
                                     {
                                         d.losses = reader.GetInt32("games_played");
                                     }
+
                                     totalGames += reader.GetInt32("games_played");
                                     globalResults[reader.GetString("hero")] = d;
                                 }
@@ -353,18 +362,19 @@ namespace DailyTasks
 
 
                             using var cmd = conn.CreateCommand();
-                            cmd.CommandText = "INSERT INTO heroesprofile_cache.global_hero_change (game_version, game_type, hero, win_rate, popularity, ban_rate, games_played, wins, losses, bans) VALUES (" +
-                                              "\"" + patch + "\"" + ", " +
-                                              "\"" + gameType + "\"" + ", " +
-                                              "\"" + hero + "\"" + ", " +
-                                              "\"" + d.win_rate + "\"" + ", " +
-                                              "\"" + d.popularity + "\"" + ", " +
-                                              "\"" + d.ban_rate + "\"" + ", " +
-                                              "\"" + d.games_played + "\"" + ", " +
-                                              "\"" + d.wins + "\"" + ", " +
-                                              "\"" + d.losses + "\"" + ", " +
-                                              "\"" + d.bans + "\"" +
-                                              ")";
+                            cmd.CommandText =
+                                    "INSERT INTO heroesprofile_cache.global_hero_change (game_version, game_type, hero, win_rate, popularity, ban_rate, games_played, wins, losses, bans) VALUES (" +
+                                    "\"" + patch + "\"" + ", " +
+                                    "\"" + gameType + "\"" + ", " +
+                                    "\"" + hero + "\"" + ", " +
+                                    "\"" + d.win_rate + "\"" + ", " +
+                                    "\"" + d.popularity + "\"" + ", " +
+                                    "\"" + d.ban_rate + "\"" + ", " +
+                                    "\"" + d.games_played + "\"" + ", " +
+                                    "\"" + d.wins + "\"" + ", " +
+                                    "\"" + d.losses + "\"" + ", " +
+                                    "\"" + d.bans + "\"" +
+                                    ")";
                             cmd.CommandText += " ON DUPLICATE KEY UPDATE " +
                                                "win_rate = VALUES(win_rate), " +
                                                "popularity = VALUES(popularity), " +
@@ -383,5 +393,4 @@ namespace DailyTasks
             }
         }
     }
-
 }

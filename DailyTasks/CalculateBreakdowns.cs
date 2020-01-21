@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using DailyTasks.Models;
 using MySql.Data.MySqlClient;
 
 namespace DailyTasks
 {
     internal class CalculateBreakdowns
     {
-        private string strConnect = new DB_Connect().heroesprofile_config;
+        private readonly DbSettings _dbSettings;
+        private readonly string _connectionString;
         private Dictionary<string, string> heroesList = new Dictionary<string, string>();
         private Dictionary<string, string> heroesList_short = new Dictionary<string, string>();
         private Dictionary<string, string> mmr_type_ids = new Dictionary<string, string>();
@@ -25,8 +27,11 @@ namespace DailyTasks
         private const double MIN_GAMES_PLAYED_HERO = 5;
         Dictionary<string, string> leagueList = new Dictionary<string, string>();
 
-        public CalculateBreakdowns()
+        public CalculateBreakdowns(DbSettings dbSettings)
         {
+            _dbSettings = dbSettings;
+            _connectionString = ConnectionStringBuilder.BuildConnectionString(_dbSettings);
+            
             getHeroesList();
 
             var roleList = new Dictionary<string, string>
@@ -69,7 +74,7 @@ namespace DailyTasks
         }
         private void getHeroesList()
         {
-            using var conn = new MySqlConnection(strConnect);
+            using var conn = new MySqlConnection(_connectionString);
             conn.Open();
 
             using (var cmd = conn.CreateCommand())
@@ -106,7 +111,7 @@ namespace DailyTasks
         private void CalculateLeagues(string type, string game_type, string season)
         {
             var totalPlayers = 0;
-            using (var conn = new MySqlConnection(strConnect))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using var cmd = conn.CreateCommand();
@@ -213,7 +218,7 @@ namespace DailyTasks
                 };
                 foreach (var item in mmr_list.Keys)
                 {
-                    using var conn = new MySqlConnection(strConnect);
+                    using var conn = new MySqlConnection(_connectionString);
                     conn.Open();
 
                     //Min to get into silver
