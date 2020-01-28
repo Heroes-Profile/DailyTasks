@@ -9,30 +9,30 @@ namespace DailyTasks
     {
         private readonly DbSettings _dbSettings;
         private readonly string _connectionString;
-        private Dictionary<string, string> heroesList = new Dictionary<string, string>();
-        private Dictionary<string, string> heroesList_short = new Dictionary<string, string>();
-        private Dictionary<string, string> mmr_type_ids = new Dictionary<string, string>();
-        private Dictionary<string, string> mmr_type_names = new Dictionary<string, string>();
-        private Dictionary<string, string> league_tiers = new Dictionary<string, string>();
+        private Dictionary<string, string> _heroesList = new Dictionary<string, string>();
+        private Dictionary<string, string> _heroesListShort = new Dictionary<string, string>();
+        private Dictionary<string, string> _mmrTypeIds = new Dictionary<string, string>();
+        private Dictionary<string, string> _mmrTypeNames = new Dictionary<string, string>();
+        private Dictionary<string, string> _leagueTiers = new Dictionary<string, string>();
 
-        private const double bronze = .12;
-        private const double silver = .23;
-        private const double gold = .26;
-        private const double platinum = .22;
-        private const double diamond = .12;
-        private const double master = .05;
-        private const double grandmaster = 200;
+        private const double Bronze = .12;
+        private const double Silver = .23;
+        private const double Gold = .26;
+        private const double Platinum = .22;
+        private const double Diamond = .12;
+        private const double Master = .05;
+        private const double Grandmaster = 200;
 
-        private const double MIN_GAMES_PLAYED = 25;
-        private const double MIN_GAMES_PLAYED_HERO = 5;
-        Dictionary<string, string> leagueList = new Dictionary<string, string>();
+        private const double MinGamesPlayed = 25;
+        private const double MinGamesPlayedHero = 5;
+        Dictionary<string, string> _leagueList = new Dictionary<string, string>();
 
         public CalculateBreakdowns(DbSettings dbSettings)
         {
             _dbSettings = dbSettings;
             _connectionString = ConnectionStringBuilder.BuildConnectionString(_dbSettings);
             
-            getHeroesList();
+            GetHeroesList();
 
             var roleList = new Dictionary<string, string>
             {
@@ -45,34 +45,33 @@ namespace DailyTasks
             };
 
 
-            leagueList.Add("5", "sl");
+            _leagueList.Add("5", "sl");
+            _leagueList.Add("3", "hl");
+            _leagueList.Add("1", "qm");
+            _leagueList.Add("4", "tl");
+            _leagueList.Add("2", "ud");
 
-            leagueList.Add("3", "hl");
-            leagueList.Add("1", "qm");
-            leagueList.Add("4", "tl");
-            leagueList.Add("2", "ud");
 
-
-            foreach (var leagueItem in leagueList.Keys)
+            foreach (var leagueItem in _leagueList.Keys)
             {
-                foreach (var item in heroesList.Keys)
+                foreach (var item in _heroesList.Keys)
                 {
-                    CalculateLeagues(mmr_type_names[heroesList_short[item]], leagueItem, "all");
+                    CalculateLeagues(_mmrTypeNames[_heroesListShort[item]], leagueItem, "all");
                 }
                 CalculateLeagues("10000", leagueItem, "all");
 
             }
 
-            foreach (var leagueItem in leagueList.Keys)
+            foreach (var leagueItem in _leagueList.Keys)
             {
                 foreach (var role in roleList.Keys)
                 {
-                    CalculateLeagues(mmr_type_names[role], leagueItem, "all");
+                    CalculateLeagues(_mmrTypeNames[role], leagueItem, "all");
                 }
             }
 
         }
-        private void getHeroesList()
+        private void GetHeroesList()
         {
             using var conn = new MySqlConnection(_connectionString);
             conn.Open();
@@ -81,17 +80,15 @@ namespace DailyTasks
             {
 
                 cmd.CommandText = "SELECT name,short_name FROM heroes";
-                var Reader = cmd.ExecuteReader();
-                while (Reader.Read())
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
+                    var heroName = reader["short_name"].Equals(DBNull.Value) ? string.Empty : reader.GetString("short_name");
+                    var name = reader["name"].Equals(DBNull.Value) ? string.Empty : reader.GetString("name");
 
-                    var heroName = Reader["short_name"].Equals(DBNull.Value) ? string.Empty : Reader.GetString("short_name");
-                    var name = Reader["name"].Equals(DBNull.Value) ? string.Empty : Reader.GetString("name");
+                    _heroesListShort.Add(heroName, name);
 
-
-                    heroesList_short.Add(heroName, name);
-
-                    heroesList.Add(heroName, name);
+                    _heroesList.Add(heroName, name);
                     Console.WriteLine(heroName);
                 }
             }
@@ -99,16 +96,16 @@ namespace DailyTasks
             using (var cmd = conn.CreateCommand())
             {
                 cmd.CommandText = "SELECT * FROM heroesprofile.mmr_type_ids;";
-                var Reader = cmd.ExecuteReader();
-                while (Reader.Read())
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    mmr_type_ids.Add(Reader.GetString("mmr_type_id"), Reader.GetString("name"));
-                    mmr_type_names.Add(Reader.GetString("name"), Reader.GetString("mmr_type_id"));
+                    _mmrTypeIds.Add(reader.GetString("mmr_type_id"), reader.GetString("name"));
+                    _mmrTypeNames.Add(reader.GetString("name"), reader.GetString("mmr_type_id"));
                 }
             }
         }
 
-        private void CalculateLeagues(string type, string game_type, string season)
+        private void CalculateLeagues(string type, string gameType, string season)
         {
             var totalPlayers = 0;
             using (var conn = new MySqlConnection(_connectionString))
@@ -126,17 +123,17 @@ namespace DailyTasks
                                   " heroesprofile.master_mmr_data" +
                                   " WHERE" +
                                   " type_value = " + type +
-                                  " AND game_type = " + game_type +
+                                  " AND game_type = " + gameType +
                                   " GROUP BY type_value, game_type, blizz_id, region";
 
                 if (type == "10000")
                 {
-                    cmd.CommandText += " HAVING(win + loss) > " + MIN_GAMES_PLAYED + ") as data";
+                    cmd.CommandText += " HAVING(win + loss) > " + MinGamesPlayed + ") as data";
 
                 }
                 else
                 {
-                    cmd.CommandText += " HAVING(win + loss) > " + MIN_GAMES_PLAYED_HERO + ") as data";
+                    cmd.CommandText += " HAVING(win + loss) > " + MinGamesPlayedHero + ") as data";
 
                 }
 
@@ -152,37 +149,37 @@ namespace DailyTasks
 
             if (totalPlayers <= 15) return;
             {
-                var bronzeTotal = Math.Floor(totalPlayers * bronze);
+                var bronzeTotal = Math.Floor(totalPlayers * Bronze);
                 if (bronzeTotal == 0)
                 {
                     bronzeTotal = 1;
                 }
 
-                var silverTotal = Math.Floor(totalPlayers * silver);
+                var silverTotal = Math.Floor(totalPlayers * Silver);
                 if (bronzeTotal == 0)
                 {
                     silverTotal = 1;
                 }
 
-                var goldTotal = Math.Floor(totalPlayers * gold);
+                var goldTotal = Math.Floor(totalPlayers * Gold);
                 if (goldTotal == 0)
                 {
                     goldTotal = 1;
                 }
 
-                var platinumTotal = Math.Floor(totalPlayers * platinum);
+                var platinumTotal = Math.Floor(totalPlayers * Platinum);
                 if (platinumTotal == 0)
                 {
                     platinumTotal = 1;
                 }
 
-                var diamondTotal = Math.Floor(totalPlayers * diamond);
+                var diamondTotal = Math.Floor(totalPlayers * Diamond);
                 if (diamondTotal == 0)
                 {
                     diamondTotal = 1;
                 }
 
-                var masterTotal = Math.Floor(totalPlayers * master);
+                var masterTotal = Math.Floor(totalPlayers * Master);
                 if (masterTotal == 0)
                 {
                     masterTotal = 1;
@@ -195,7 +192,7 @@ namespace DailyTasks
                 double[] diamondPlayers = { platinumPlayers[1] + goldPlayers[1] + silverPlayers[1] + bronzePlayers[1], diamondTotal };
                 double[] masterPlayers = { diamondPlayers[1] + platinumPlayers[1] + goldPlayers[1] + silverPlayers[1] + bronzePlayers[1], masterTotal };
 
-                var mmr_list = new Dictionary<string, double[]>
+                var mmrList = new Dictionary<string, double[]>
                 {
                         {"2", silverPlayers},
                         {"3", goldPlayers},
@@ -207,7 +204,7 @@ namespace DailyTasks
                 // mmr_list.Add("1", bronzePlayers);
 
 
-                var league_tier_names = new Dictionary<string, string>
+                var leagueTierNames = new Dictionary<string, string>
                 {
                         {"1", "bronze"},
                         {"2", "silver"},
@@ -216,7 +213,7 @@ namespace DailyTasks
                         {"5", "diamond"},
                         {"6", "master"}
                 };
-                foreach (var item in mmr_list.Keys)
+                foreach (var item in mmrList.Keys)
                 {
                     using var conn = new MySqlConnection(_connectionString);
                     conn.Open();
@@ -229,44 +226,44 @@ namespace DailyTasks
                         cmd.CommandText = "SELECT MIN(conservative_rating) as min_mmr FROM (SELECT * FROM heroesprofile.master_mmr_data" +
                                           " WHERE" +
                                           " type_value = " + type +
-                                          " AND game_type = " + game_type;
+                                          " AND game_type = " + gameType;
                         if (type == "10000")
                         {
-                            cmd.CommandText += " HAVING(win + loss) > " + MIN_GAMES_PLAYED;
+                            cmd.CommandText += " HAVING(win + loss) > " + MinGamesPlayed;
 
                         }
                         else
                         {
-                            cmd.CommandText += " HAVING(win + loss) > " + MIN_GAMES_PLAYED_HERO;
+                            cmd.CommandText += " HAVING(win + loss) > " + MinGamesPlayedHero;
 
                         }
 
                         cmd.CommandText += " ORDER BY conservative_rating ASC, (win + loss) ASC" +
-                                           " LIMIT " + mmr_list[item][1] + " OFFSET " + mmr_list[item][0] + ") as mmr_data";
+                                           " LIMIT " + mmrList[item][1] + " OFFSET " + mmrList[item][0] + ") as mmr_data";
 
                         cmd.CommandTimeout = 0;
                         //Console.WriteLine(cmd.CommandText);
-                        var Reader = cmd.ExecuteReader();
+                        var reader = cmd.ExecuteReader();
 
-                        while (Reader.Read())
+                        while (reader.Read())
                         {
-                            var value = Reader["min_mmr"].Equals(DBNull.Value) ? string.Empty : Reader.GetString("min_mmr");
+                            var value = reader["min_mmr"].Equals(DBNull.Value) ? string.Empty : reader.GetString("min_mmr");
                             if (value == "")
                             {
                                 minMmr = 0;
                             }
                             else
                             {
-                                minMmr = 1800 + 40 * Convert.ToDouble(Reader["min_mmr"].Equals(DBNull.Value) ? string.Empty : Reader.GetString("min_mmr"));
+                                minMmr = 1800 + 40 * Convert.ToDouble(reader["min_mmr"].Equals(DBNull.Value) ? string.Empty : reader.GetString("min_mmr"));
                             }
                         }
                     }
-                    Console.WriteLine("For type " + mmr_type_ids[type] + " in league " + leagueList[game_type] + " |" + league_tier_names[item] + " < " + minMmr);
+                    Console.WriteLine("For type " + _mmrTypeIds[type] + " in league " + _leagueList[gameType] + " |" + leagueTierNames[item] + " < " + minMmr);
                     using (var cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = "INSERT into heroesprofile.league_breakdowns (type_role_hero, game_type, league_tier, min_mmr) VALUES (" +
                                           type + "," +
-                                          game_type + "," +
+                                          gameType + "," +
                                           item + "," +
                                           minMmr + ")";
                         cmd.CommandText += " ON DUPLICATE KEY UPDATE " +
@@ -276,7 +273,7 @@ namespace DailyTasks
                                            "min_mmr = VALUES(min_mmr)";
 
                         //Console.WriteLine(cmd.CommandText);
-                        var Reader = cmd.ExecuteReader();
+                        var reader = cmd.ExecuteReader();
                     }
                 }
             }

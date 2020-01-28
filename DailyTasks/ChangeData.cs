@@ -1,6 +1,6 @@
 ﻿namespace DailyTasks
 {
-    class ChangeData
+    internal class ChangeData
     {
         public double wins { get; set; }
         public double losses { get; set; }

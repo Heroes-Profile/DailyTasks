@@ -44,11 +44,10 @@ namespace DailyTasks
                 }
             }
 
-            var gameTypes = new string[3];
-
-            gameTypes[0] = "5";
-            gameTypes[1] = "1";
-            gameTypes[2] = "2";
+            var gameTypes = new List<string>()
+            {
+                    "5", "1", "2"
+            };
 
             foreach (var majorPatch in majorPatches)
             {
@@ -66,8 +65,6 @@ namespace DailyTasks
                                           " AND game_type in (" + gameType + ")";
                         cmd.CommandText += " GROUP by hero, win_loss";
                         cmd.CommandText += " ORDER BY hero ASC, win_loss ASC";
-
-
 
                         Console.WriteLine(cmd.CommandText);
                         cmd.CommandTimeout = 0;

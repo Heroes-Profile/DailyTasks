@@ -29,7 +29,6 @@ namespace DailyTasks
             
             // Set up the objects we need to get to configuration settings
             var config = LoadConfiguration();
-            var a = config.GetSection("DbSettings");
             var dbSettings = config.GetSection("DbSettings").Get<DbSettings>();
             
             // Add the config to our DI container for later use
@@ -45,7 +44,7 @@ namespace DailyTasks
         {
             var builder = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json")
+                    .AddJsonFile("appsettings.json", true, true)
                     .AddEnvironmentVariables();
             return  builder.Build();
         }
