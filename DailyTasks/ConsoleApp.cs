@@ -11,9 +11,10 @@ namespace DailyTasks
         {
             var dbSettings = ServiceProviderProvider.GetService<DbSettings>();
             var calculateLeaderboardService = ServiceProviderProvider.GetService<CalculateLeaderBoardsService>();
+            var calculateChangeService = ServiceProviderProvider.GetService<CalculateChangeService>();
 
             var cl = await calculateLeaderboardService.CalculateLeaderboards();
-            var cc = new CalculateChange(dbSettings);
+            await calculateChangeService.CalculateChange();
             var cb = new CalculateBreakdowns(dbSettings);
         }
     }

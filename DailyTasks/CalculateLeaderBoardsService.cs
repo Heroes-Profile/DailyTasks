@@ -19,8 +19,6 @@ namespace DailyTasks
 
     class CalculateLeaderBoardsService
     {
-        private readonly DbSettings _dbSettings;
-        private readonly string _connectionString;
         private readonly HeroesProfileContext _context;
         private readonly HeroesProfileCacheContext _cacheContext;
 
@@ -28,10 +26,8 @@ namespace DailyTasks
         public CalculateLeaderBoardsService(DbSettings dbSettings, HeroesProfileContext context,
                                             HeroesProfileCacheContext cacheContext)
         {
-            _dbSettings = dbSettings;
             _context = context;
             _cacheContext = cacheContext;
-            _connectionString = ConnectionStringBuilder.BuildConnectionString(_dbSettings);
         }
 
         public async Task<CalculateLeaderboardsResult> CalculateLeaderboards()

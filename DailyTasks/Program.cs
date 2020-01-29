@@ -50,6 +50,9 @@ namespace DailyTasks
             services.AddDbContext<HeroesProfileCacheContext>(options => options.UseMySql(ConnectionStringBuilder.BuildConnectionString(dbSettings)));
             dbSettings.database = "heroesprofile";
 
+            services.AddScoped<CalculateLeaderBoardsService>();
+            services.AddScoped<CalculateChangeService>();
+
             // IMPORTANT! Register our application entry point
             services.AddTransient<ConsoleApp>();
             return services;
