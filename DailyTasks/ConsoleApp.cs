@@ -9,13 +9,13 @@ namespace DailyTasks
     {
         public static async Task Run()
         {
-            var dbSettings = ServiceProviderProvider.GetService<DbSettings>();
             var calculateLeaderboardService = ServiceProviderProvider.GetService<CalculateLeaderBoardsService>();
             var calculateChangeService = ServiceProviderProvider.GetService<CalculateChangeService>();
+            var calculateBreakdownsService = ServiceProviderProvider.GetService<CalculateBreakdownsService>();
 
             var cl = await calculateLeaderboardService.CalculateLeaderboards();
             await calculateChangeService.CalculateChange();
-            var cb = new CalculateBreakdowns(dbSettings);
+            await calculateBreakdownsService.CalculateBreakdowns();
         }
     }
 }

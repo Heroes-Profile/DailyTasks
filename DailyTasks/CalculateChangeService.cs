@@ -23,11 +23,11 @@ namespace DailyTasks
         public async Task CalculateChange()
         {
             //Get major versions ('2.43') from SeasonGameVersions table
-            var patches = await _context.SeasonGameVersions
-                                        .Where(x => string.Compare(x.GameVersion, "2.43", StringComparison.Ordinal) >
-                                                    0)
+            var patches = (await _context.SeasonGameVersions
                                         .Select(x => x.GameVersion)
-                                        .ToListAsync();
+                                        .ToListAsync())
+                                        .Where(x => string.Compare(x, "2.43", StringComparison.Ordinal) > 0)
+                                        .ToList();
 
             //Split the full version to just the major version
             var majorPatches = patches

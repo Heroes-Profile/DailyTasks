@@ -23,7 +23,7 @@ namespace DailyTasks
         private readonly HeroesProfileCacheContext _cacheContext;
 
 
-        public CalculateLeaderBoardsService(DbSettings dbSettings, HeroesProfileContext context,
+        public CalculateLeaderBoardsService(HeroesProfileContext context,
                                             HeroesProfileCacheContext cacheContext)
         {
             _context = context;
@@ -33,6 +33,9 @@ namespace DailyTasks
         public async Task<CalculateLeaderboardsResult> CalculateLeaderboards()
         {
             var result = new CalculateLeaderboardsResult();
+            result.GameTypes.Add("qm", 1);
+            result.GameTypes.Add("ud", 2);
+            result.GameTypes.Add("sl", 5);
 
             var heroes = await _context.Heroes.Select(x => new {x.Name, x.Id, x.NewRole}).ToListAsync();
 
@@ -59,11 +62,6 @@ namespace DailyTasks
             var maxCacheNumber = await _cacheContext.TableCacheValue.Where(x => x.TableToCache == "leaderboard")
                                                     .MaxAsync(x => x.CacheNumber);
 
-            result.GameTypes.Add("qm", 1);
-            result.GameTypes.Add("ud", 2);
-            result.GameTypes.Add("sl", 5);
-
-            var weeks = 1;
 
             var maxSeasonDatesId = await _context.SeasonDates.MaxAsync(x => x.Id);
 
@@ -72,7 +70,7 @@ namespace DailyTasks
             var startDate = (await _context.SeasonDates.FirstOrDefaultAsync(x => x.Id == result.Season))?.StartDate ??
                             DateTime.Now;
 
-            weeks = (int) Math.Round((DateTime.Now - startDate).TotalDays / 7, 0);
+            var weeks = (int) Math.Round((DateTime.Now - startDate).TotalDays / 7, 0);
 
             if (weeks == 0)
             {
@@ -133,7 +131,7 @@ namespace DailyTasks
                                                             && x.Season == season
                                                             && x.GameType == gameType)
                               join mmd in _context.MasterMmrData.Where(x =>
-                                              x.GameType == gameType && x.TypeValue == playerHeroRole)
+                                              x.GameType == (byte)gameType && x.TypeValue == playerHeroRole)
                                       on new {mgpd.BlizzId, mgpd.Region} equals
                                       new {mmd.BlizzId, mmd.Region}
                               join b in _context.Battletags
