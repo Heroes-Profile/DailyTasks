@@ -51,7 +51,10 @@ namespace DailyTasks
                     var globalResults = new Dictionary<string, ChangeData>();
                     var totalGames = 0;
 
-                    var heroStats = await _context.GlobalHeroStats.GroupBy(x => new {x.Hero, x.WinLoss})
+                    var heroStats = await _context.GlobalHeroStats
+                                                  .Where(x => x.GameVersion.StartsWith(patch)
+                                                  && x.GameType == Convert.ToSByte(gameType))
+                                                  .GroupBy(x => new {x.Hero, x.WinLoss})
                                                   .Select(x => new
                                                   {
                                                           x.Key.Hero, x.Key.WinLoss,
@@ -103,7 +106,7 @@ namespace DailyTasks
                     }
 
                     var heroBans = await _context.GlobalHeroStatsBans.Where(x => x.GameVersion.StartsWith(patch)
-                                                                              && x.GameType.ToString() == gameType)
+                                                                              && x.GameType == Convert.ToSByte(gameType))
                                                  .GroupBy(x => x.Hero)
                                                  .Select(x => new {Hero = x.Key, Bans = x.Sum(x => x.Bans)})
                                                  .OrderBy(x => x.Hero)

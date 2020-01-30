@@ -116,7 +116,7 @@ namespace DailyTasks
                                              .GroupBy(x => new {x.TypeValue, x.GameType, x.BlizzId, x.Region})
                                              .Select(x => new
                                              {
-                                                     TypeValue = x.Select(x => x.TypeValue),
+                                                     x.Key.TypeValue,
                                                      x.Key.GameType,
                                                      x.Key.BlizzId,
                                                      x.Key.Region,
